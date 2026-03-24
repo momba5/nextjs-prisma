@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Kenna Real Estate — Multi-tenant Analytics Schema
+// Learn more: https://pris.ly/d/prisma-schema
 
 datasource db {
   provider = "postgresql"
@@ -10,9 +10,35 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Todo {
-  id        String   @id @default(uuid())
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
   createdAt DateTime @default(now())
-  text      String
-  completed Boolean
+  updatedAt DateTime @updatedAt
+
+  users  User[]
+  events AnalyticsEvent[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  name           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model AnalyticsEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  source         String   // "FUB", "GA4", "GSC", "SEO"
+  type           String   // "lead_created", "session", "page_view", "ranking"
+  payload        Json     // raw data from n8n webhook
+  occurredAt     DateTime // when the event actually happened
+  createdAt      DateTime @default(now())
 }
